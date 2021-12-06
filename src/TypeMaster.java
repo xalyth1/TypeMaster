@@ -7,35 +7,40 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.image.BufferedImage;
 
-public class TypeMaster extends JFrame {
-    JTextPane jTextPane;
+public class TypeMaster extends JFrame implements Runnable{
 
+    StyledDocument doc = new DefaultStyledDocument();
+    JTextPane jTextPane = new JTextPane(doc);
+    {
+        jTextPane.setText("BBBBb");
+    }
 
     JPanel labelsPanel = new JPanel();
     JPanel progressBarPanel;
 
     JLabel pointerLabel;
 
-
-
     int pointer = 0;
     boolean error = false;
+    int errorIndex;
 
-    BufferedImage bi;
+    double WPM = 0;
+    int words = 0;
 
+    BufferedImage bi = prepareBufferedImage(new BufferedImage(700,50, BufferedImage.TYPE_INT_ARGB), pointer);
 
     JButton inputButton;
     KeyAdapter keyAdapter;
-    StyledDocument doc = new DefaultStyledDocument();
+
+    long startMillis = System.currentTimeMillis();
+
 
     public static void main(String[] args) {
-        javax.swing.SwingUtilities.invokeLater(new Runnable() {
-            public void run() {
-                createAndShowGUI();
-            }
-        });
+        SwingUtilities.invokeLater(new TypeMaster());
+    }
 
-        //new TypeMaster();
+    public void run() {
+        createAndShowGUI();
     }
 
     public TypeMaster() {
@@ -58,28 +63,27 @@ public class TypeMaster extends JFrame {
         setVisible(true);
     }
 
-    public static void createAndShowGUI() {
-        TypeMaster frame = new TypeMaster();
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(700, 700);
+    public void createAndShowGUI() {
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setSize(700, 700);
 
-        frame.setResizable(false);
-        frame.setLocationRelativeTo(null);
-        frame.setTitle("Type Master");
+        setResizable(false);
+        setLocationRelativeTo(null);
+        setTitle("Type Master");
 
+        initializeGUIelements();
 
+        words = jTextPane.getText().split(" ").length;
 
-        frame.initializeGUIelements();
+        //bi = prepareBufferedImage(new BufferedImage(700, 50, BufferedImage.TYPE_INT_ARGB));
+        createProgressBarPanel();//
+        organizeLayout();
 
-        frame.bi = frame.prepareBufferedImage(new BufferedImage(700, 50, BufferedImage.TYPE_INT_ARGB));
-        frame.createProgressBarPanel();//
-        frame.organizeLayout();
-
-        System.out.println("d");
-        frame.setVisible(true);
+        System.out.println("created GUI");
+        setVisible(true);
     }
 
-    public BufferedImage prepareBufferedImage(BufferedImage img) {
+    public BufferedImage prepareBufferedImage(BufferedImage img, int pointer) {
         Graphics2D paintBrush = img.createGraphics();
 
         paintBrush.setColor(Color.RED);
@@ -87,8 +91,19 @@ public class TypeMaster extends JFrame {
 
         paintBrush.setColor(Color.GREEN);
 
-        System.out.println("AAA " + jTextPane);
-        int progress = pointer / jTextPane.getText().length();
+        //System.out.println("AAA " + jTextPane);
+
+        //double percentage = error ? (double) pointer /  jTextPane.getText().length() : (double) errorIndex /  jTextPane.getText().length();
+        double percentage;
+
+        if (!error) {
+            percentage = (double) pointer / jTextPane.getText().length();
+        } else {
+            percentage = (double) errorIndex / jTextPane.getText().length();
+        }
+
+
+        int progress =  (int) (percentage * img.getWidth());
         paintBrush.fillRect(0,0, progress, 50);
 
         paintBrush.dispose();
@@ -105,9 +120,9 @@ public class TypeMaster extends JFrame {
                 super.paintComponent(g);
                 Graphics2D paintBrush = bi.createGraphics();
 
-                paintBrush.setColor(Color.GREEN);
-                int progress = pointer / jTextPane.getText().length();
-                paintBrush.fillRect(0,0, progress, 50);
+//                paintBrush.setColor(Color.GREEN);
+//                int progress = pointer / jTextPane.getText().length();
+//                paintBrush.fillRect(0,0, progress, 50);
 
                 g.drawImage(bi, 0, 0, this);
                 paintBrush.dispose();
@@ -117,10 +132,15 @@ public class TypeMaster extends JFrame {
             }
         };
         //progressBarPanel.setBackground(Color.WHITE);
-        progressBarPanel.setMaximumSize(new Dimension(700, 50));
-        progressBarPanel.setMinimumSize(new Dimension(700, 50));
-        progressBarPanel.setPreferredSize(new Dimension(700, 50));
-        progressBarPanel.setAlignmentX(0);
+
+
+//        progressBarPanel.setMaximumSize(new Dimension(700, 50));
+//        progressBarPanel.setMinimumSize(new Dimension(700, 50));
+//        progressBarPanel.setPreferredSize(new Dimension(700, 50));
+        System.out.println("content pane widtg: " + this.getContentPane().getWidth());
+        progressBarPanel.setPreferredSize(new Dimension(this.getContentPane().getWidth(), 50));
+
+//        progressBarPanel.setAlignmentX(0);
 
     }
 
@@ -136,17 +156,29 @@ public class TypeMaster extends JFrame {
             public void keyTyped(KeyEvent e) {
                 super.keyPressed(e);
 
-                System.out.println();
-                System.out.println("performed " + e.getKeyChar());
-
-                updateProgressBarPanel();
-                bi = prepareBufferedImage(bi);
-                progressBarPanel.repaint();
-
-
+                //System.out.println();
+                //System.out.println("performed " + e.getKeyChar());
 
                 String text = jTextPane.getText();
-                System.out.println("text: " + text);
+                //System.out.println("text: " + text);
+
+
+                int correctIndex;
+                if (error)
+                    correctIndex = errorIndex;
+                else
+                    correctIndex = pointer;
+                String correctSubSting = text.substring(0,correctIndex);
+
+                int wordsCompleted = correctSubSting.split(" ").length;
+
+
+                long timeInMillis = System.currentTimeMillis() - startMillis;
+                double timeInSeconds = (double) timeInMillis / 1000;
+
+
+
+                WPM = (double) wordsCompleted * 60 / timeInSeconds;
 
                 String currentColor = null;
 
@@ -161,14 +193,30 @@ public class TypeMaster extends JFrame {
                         pointer--;
                     changeColor(pointer, Color.BLACK);
                     currentColor = "BLACK";
+
+                    if (pointer == errorIndex) {
+                        error = false;
+                    }
+
+
                 } else if (e.getKeyChar() != text.charAt(pointer)) {
                     changeColor(pointer, Color.RED);
                     currentColor = "RED";
-                    pointer++;
+
+                    if(!error) {
+
+                        error = true; // wrror = true means: occurence of any wrong (red) character in entire text
+                        errorIndex = pointer;
+                    }
+                        pointer++;
+
+
+
+
                 }
 
-                System.out.println("set label text " + pointer);
-                pointerLabel.setText(" Pointer: " + pointer + "      Color: " + currentColor);
+                //System.out.println("set label text " + pointer);
+                pointerLabel.setText(" Pointer: " + pointer + "      Color: " + currentColor + "    WPM = "  + (int) WPM);
 
 
 
@@ -177,6 +225,9 @@ public class TypeMaster extends JFrame {
                 jTextPane.getCaret().setVisible(true);
 
 
+                updateProgressBarPanel();
+                bi = prepareBufferedImage(bi, pointer);
+                //progressBarPanel.repaint();
 
             }
         };
@@ -201,10 +252,11 @@ public class TypeMaster extends JFrame {
 
                         if (inputText != null) {
                             pointer = 0;
+                            error = false;
                             //tPane = new JTextPane(doc);
 
                             changeColor(pointer, Color.BLACK);
-                            jTextPane.setText(inputText);
+
 
 
                             //tPane.addKeyListener(keyAdapter);
@@ -212,8 +264,15 @@ public class TypeMaster extends JFrame {
                             Font font = new Font("SansSerif", Font.BOLD, 30);
                             jTextPane.setFont(font);
 
-                            jTextPane.setEditable(false);
 
+                            jTextPane.setText(inputText);
+
+                            Style style = jTextPane.addStyle("I'm a Style", null);
+                            jTextPane.getStyledDocument().setCharacterAttributes(0, inputText.length(),style, true);
+
+
+                            jTextPane.setEditable(false);
+                            //jTextPane.setDisabledTextColor(Color.BLACK);//
 
                             pointerLabel.setText(" Pointer: " + pointer);
                             //label.setHorizontalAlignment(SwingConstants.LEFT);
@@ -223,6 +282,10 @@ public class TypeMaster extends JFrame {
 
                             jTextPane.grabFocus();
                             jTextPane.requestFocusInWindow();
+
+                            bi = prepareBufferedImage(bi,pointer);
+
+                            startMillis = System.currentTimeMillis();
                         }
                     }
                 });
@@ -232,7 +295,7 @@ public class TypeMaster extends JFrame {
 
     public void initializeGUIelements() {
         //StyledDocument doc = new DefaultStyledDocument();
-        jTextPane = new JTextPane(doc);
+        //jTextPane = new JTextPane(doc);
         jTextPane.setText("Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.");
 
         Font font = new Font("SansSerif", Font.BOLD, 30);
