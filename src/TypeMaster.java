@@ -11,9 +11,17 @@ public class TypeMaster extends JFrame implements Runnable{
 
     StyledDocument doc = new DefaultStyledDocument();
     JTextPane jTextPane = new JTextPane(doc);
-    {
-        jTextPane.setText("BBBBb");
-    }
+
+
+    JScrollPane scrollPane = new JScrollPane(jTextPane);
+
+
+
+
+
+//    {
+//        jTextPane.setText("BBBBb");
+//    }
 
     JPanel labelsPanel = new JPanel();
     JPanel progressBarPanel;
@@ -341,8 +349,26 @@ public class TypeMaster extends JFrame implements Runnable{
 
         add(labelsPanel);
 
-        add(jTextPane);
 
-        add(inputButton);
+        JPanel textPanel = new JPanel();
+        textPanel.setLayout(new BorderLayout());
+
+        //add(jTextPane);
+        textPanel.add(scrollPane, BorderLayout.CENTER);
+//        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+//        scrollPane.setPreferredSize(new Dimension(20,200));
+//        //scrollPane.setCorner(JScrollPane.UPPER_RIGHT_CORNER, new Corner());
+//        scrollPane.getVerticalScrollBar().setUnitIncrement(10);
+
+
+        //textPanel.add(scrollPane.getVerticalScrollBar(), BorderLayout.EAST);
+
+        add(textPanel);
+
+        //add(scrollPane);
+
+        JPanel inputPanel = new JPanel();
+        inputPanel.add(inputButton);
+        add(inputPanel);
     }
 }
