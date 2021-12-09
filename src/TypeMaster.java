@@ -16,17 +16,12 @@ public class TypeMaster extends JFrame implements Runnable{
     JScrollPane scrollPane = new JScrollPane(jTextPane);
 
 
-
-
-
-//    {
-//        jTextPane.setText("BBBBb");
-//    }
-
     JPanel labelsPanel = new JPanel();
     JPanel progressBarPanel;
 
     JLabel pointerLabel;
+    JLabel timeLabel = new JLabel();
+    MyTimer myTimer = new MyTimer(timeLabel);
 
     int pointer = 0;
     boolean error = false;
@@ -86,6 +81,10 @@ public class TypeMaster extends JFrame implements Runnable{
         //bi = prepareBufferedImage(new BufferedImage(700, 50, BufferedImage.TYPE_INT_ARGB));
         createProgressBarPanel();//
         organizeLayout();
+
+        //SwingUtilities.invokeLater(myTimer);
+        Thread thread = new Thread(myTimer);
+        thread.start();
 
         System.out.println("created GUI");
         setVisible(true);
@@ -183,10 +182,9 @@ public class TypeMaster extends JFrame implements Runnable{
 
                 long timeInMillis = System.currentTimeMillis() - startMillis;
                 double timeInSeconds = (double) timeInMillis / 1000;
-
-
-
                 WPM = (double) wordsCompleted * 60 / timeInSeconds;
+
+
 
                 String currentColor = null;
 
@@ -224,7 +222,18 @@ public class TypeMaster extends JFrame implements Runnable{
                 }
 
                 //System.out.println("set label text " + pointer);
-                pointerLabel.setText(" Pointer: " + pointer + "      Color: " + currentColor + "    WPM = "  + (int) WPM);
+
+
+                /*
+                long time = System.currentTimeMillis() - startMillis;
+                long timeInSec = time / 1000;
+                long timeInMinutes = timeInSec / 60;
+
+                long sec = timeInSec % 60;
+
+                 */
+
+                pointerLabel.setText(" Pointer: " + pointer + "      Color: " + currentColor + "    WPM = "  + (int) WPM );
 
 
 
@@ -344,6 +353,7 @@ public class TypeMaster extends JFrame implements Runnable{
 
         //labelsPanel.setLayout(new BoxLayout(this.getContentPane(), BoxLayout.Y_AXIS));
         labelsPanel.add(pointerLabel);
+        labelsPanel.add(timeLabel);
 
         add(progressBarPanel);
 
