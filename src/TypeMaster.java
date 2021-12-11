@@ -7,21 +7,20 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.image.BufferedImage;
 
-public class TypeMaster extends JFrame implements Runnable{
+public class TypeMaster extends JFrame implements Runnable {
 
     StyledDocument doc = new DefaultStyledDocument();
     JTextPane jTextPane = new JTextPane(doc);
-
-
     JScrollPane scrollPane = new JScrollPane(jTextPane);
-
 
     JPanel labelsPanel = new JPanel();
     JPanel progressBarPanel;
 
     JLabel pointerLabel;
     JLabel timeLabel = new JLabel();
+
     MyTimer myTimer = new MyTimer(timeLabel);
+    Thread timerThread;
 
     int pointer = 0;
     boolean error = false;
@@ -30,13 +29,13 @@ public class TypeMaster extends JFrame implements Runnable{
     double WPM = 0;
     int words = 0;
 
-    BufferedImage bi = prepareBufferedImage(new BufferedImage(700,50, BufferedImage.TYPE_INT_ARGB), pointer);
+    BufferedImage bi = prepareBufferedImage(new BufferedImage(700, 50, BufferedImage.TYPE_INT_ARGB), pointer);
 
     JButton inputButton;
+
     KeyAdapter keyAdapter;
 
     long startMillis = System.currentTimeMillis();
-
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(new TypeMaster());
@@ -47,23 +46,6 @@ public class TypeMaster extends JFrame implements Runnable{
     }
 
     public TypeMaster() {
-
-    }
-
-    public TypeMaster(boolean x) {
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(700, 700);
-
-        setResizable(false);
-        setLocationRelativeTo(null);
-        setTitle("Type Master");
-
-
-        initializeGUIelements();
-        organizeLayout();
-
-        System.out.println("d");
-        setVisible(true);
     }
 
     public void createAndShowGUI() {
@@ -83,8 +65,9 @@ public class TypeMaster extends JFrame implements Runnable{
         organizeLayout();
 
         //SwingUtilities.invokeLater(myTimer);
-        Thread thread = new Thread(myTimer);
-        thread.start();
+        timerThread = new Thread(myTimer);
+        timerThread.start();
+        System.out.println("Timer thread started " + timerThread.getId());
 
         System.out.println("created GUI");
         setVisible(true);
@@ -94,11 +77,9 @@ public class TypeMaster extends JFrame implements Runnable{
         Graphics2D paintBrush = img.createGraphics();
 
         paintBrush.setColor(Color.RED);
-        paintBrush.fillRect(0,0, img.getWidth(), img.getHeight());
+        paintBrush.fillRect(0, 0, img.getWidth(), img.getHeight());
 
         paintBrush.setColor(Color.GREEN);
-
-        //System.out.println("AAA " + jTextPane);
 
         //double percentage = error ? (double) pointer /  jTextPane.getText().length() : (double) errorIndex /  jTextPane.getText().length();
         double percentage;
@@ -109,14 +90,12 @@ public class TypeMaster extends JFrame implements Runnable{
             percentage = (double) errorIndex / jTextPane.getText().length();
         }
 
-
-        int progress =  (int) (percentage * img.getWidth());
-        paintBrush.fillRect(0,0, progress, 50);
+        int progress = (int) (percentage * img.getWidth());
+        paintBrush.fillRect(0, 0, progress, 50);
 
         paintBrush.dispose();
         repaint();
         return img;
-
     }
 
     public void createProgressBarPanel() {
@@ -127,34 +106,15 @@ public class TypeMaster extends JFrame implements Runnable{
                 super.paintComponent(g);
                 Graphics2D paintBrush = bi.createGraphics();
 
-//                paintBrush.setColor(Color.GREEN);
-//                int progress = pointer / jTextPane.getText().length();
-//                paintBrush.fillRect(0,0, progress, 50);
-
                 g.drawImage(bi, 0, 0, this);
                 paintBrush.dispose();
                 repaint();
-
-
             }
         };
-        //progressBarPanel.setBackground(Color.WHITE);
 
-
-//        progressBarPanel.setMaximumSize(new Dimension(700, 50));
-//        progressBarPanel.setMinimumSize(new Dimension(700, 50));
-//        progressBarPanel.setPreferredSize(new Dimension(700, 50));
-        System.out.println("content pane widtg: " + this.getContentPane().getWidth());
+        System.out.println("content pane width: " + this.getContentPane().getWidth());
         progressBarPanel.setPreferredSize(new Dimension(this.getContentPane().getWidth(), 50));
-
-//        progressBarPanel.setAlignmentX(0);
-
     }
-
-    public void updateProgressBarPanel() {
-
-    }
-
 
     public KeyAdapter createKeyAdapter() {
         //pointer = 0;
@@ -163,91 +123,55 @@ public class TypeMaster extends JFrame implements Runnable{
             public void keyTyped(KeyEvent e) {
                 super.keyPressed(e);
 
-                //System.out.println();
-                //System.out.println("performed " + e.getKeyChar());
-
                 String text = jTextPane.getText();
-                //System.out.println("text: " + text);
 
-
-                int correctIndex;
-                if (error)
-                    correctIndex = errorIndex;
-                else
-                    correctIndex = pointer;
-                String correctSubSting = text.substring(0,correctIndex);
-
-                int wordsCompleted = correctSubSting.split(" ").length;
-
-
-                long timeInMillis = System.currentTimeMillis() - startMillis;
-                double timeInSeconds = (double) timeInMillis / 1000;
-                WPM = (double) wordsCompleted * 60 / timeInSeconds;
-
-
-
-                String currentColor = null;
+                calculateWPM(text);
 
                 if (e.getKeyChar() == text.charAt(pointer)) {
                     changeColor(pointer, Color.GREEN);
-                    currentColor = "GREEN";
                     pointer++;
                 } else if (e.getKeyChar() == KeyEvent.VK_BACK_SPACE) {
-
-
                     if (pointer > 0)
                         pointer--;
                     changeColor(pointer, Color.BLACK);
-                    currentColor = "BLACK";
-
                     if (pointer == errorIndex) {
                         error = false;
                     }
-
-
                 } else if (e.getKeyChar() != text.charAt(pointer)) {
                     changeColor(pointer, Color.RED);
-                    currentColor = "RED";
-
-                    if(!error) {
-
+                    if (!error) {
                         error = true; // wrror = true means: occurence of any wrong (red) character in entire text
                         errorIndex = pointer;
                     }
-                        pointer++;
-
-
-
-
+                    pointer++;
                 }
 
-                //System.out.println("set label text " + pointer);
+                pointerLabel.setText(" Pointer: " + pointer + "    WPM = " + (int) WPM);
 
-
-                /*
-                long time = System.currentTimeMillis() - startMillis;
-                long timeInSec = time / 1000;
-                long timeInMinutes = timeInSec / 60;
-
-                long sec = timeInSec % 60;
-
-                 */
-
-                pointerLabel.setText(" Pointer: " + pointer + "      Color: " + currentColor + "    WPM = "  + (int) WPM );
-
-
-
+                if (!error && pointer == text.length() - 1) {
+                    myTimer.end = true;
+                }
 
                 jTextPane.setCaretPosition(pointer);
                 jTextPane.getCaret().setVisible(true);
 
-
-                updateProgressBarPanel();
                 bi = prepareBufferedImage(bi, pointer);
-                //progressBarPanel.repaint();
-
             }
         };
+    }
+
+    private void calculateWPM(String text) {
+        int correctIndex;
+        if (error)
+            correctIndex = errorIndex;
+        else
+            correctIndex = pointer;
+
+        String correctSubSting = text.substring(0, correctIndex);
+        int wordsCompleted = correctSubSting.split(" ").length;
+        long timeInMillis = System.currentTimeMillis() - startMillis;
+        double timeInSeconds = (double) timeInMillis / 1000;
+        WPM = (double) wordsCompleted * 60 / timeInSeconds;
     }
 
     public ActionListener createActionListener() {
@@ -257,8 +181,6 @@ public class TypeMaster extends JFrame implements Runnable{
                 SwingUtilities.invokeLater(new Runnable() {
                     @Override
                     public void run() {
-
-                        //
                         String inputText = (String) JOptionPane.showInputDialog(TypeMaster.this/*JOptionPane.getRootFrame()*/,
                                 "Please input your own text:",
                                 "Customized Dialog",
@@ -270,22 +192,22 @@ public class TypeMaster extends JFrame implements Runnable{
                         if (inputText != null) {
                             pointer = 0;
                             error = false;
-                            //tPane = new JTextPane(doc);
 
                             changeColor(pointer, Color.BLACK);
 
-
-
-                            //tPane.addKeyListener(keyAdapter);
+                            myTimer.end = true;
+                            myTimer = new MyTimer(timeLabel);
+                            timerThread = new Thread(myTimer);
+                            timerThread.start();
+                            System.out.println("Timer thread started " + timerThread.getId());
 
                             Font font = new Font("SansSerif", Font.BOLD, 30);
                             jTextPane.setFont(font);
 
-
                             jTextPane.setText(inputText);
 
                             Style style = jTextPane.addStyle("I'm a Style", null);
-                            jTextPane.getStyledDocument().setCharacterAttributes(0, inputText.length(),style, true);
+                            jTextPane.getStyledDocument().setCharacterAttributes(0, inputText.length(), style, true);
 
 
                             jTextPane.setEditable(false);
@@ -300,7 +222,7 @@ public class TypeMaster extends JFrame implements Runnable{
                             jTextPane.grabFocus();
                             jTextPane.requestFocusInWindow();
 
-                            bi = prepareBufferedImage(bi,pointer);
+                            bi = prepareBufferedImage(bi, pointer);
 
                             startMillis = System.currentTimeMillis();
                         }
@@ -350,7 +272,6 @@ public class TypeMaster extends JFrame implements Runnable{
         BoxLayout boxLayout = new BoxLayout(this.getContentPane(), BoxLayout.Y_AXIS);
         setLayout(boxLayout);
 
-
         //labelsPanel.setLayout(new BoxLayout(this.getContentPane(), BoxLayout.Y_AXIS));
         labelsPanel.add(pointerLabel);
         labelsPanel.add(timeLabel);
@@ -358,7 +279,6 @@ public class TypeMaster extends JFrame implements Runnable{
         add(progressBarPanel);
 
         add(labelsPanel);
-
 
         JPanel textPanel = new JPanel();
         textPanel.setLayout(new BorderLayout());
@@ -369,7 +289,6 @@ public class TypeMaster extends JFrame implements Runnable{
 //        scrollPane.setPreferredSize(new Dimension(20,200));
 //        //scrollPane.setCorner(JScrollPane.UPPER_RIGHT_CORNER, new Corner());
 //        scrollPane.getVerticalScrollBar().setUnitIncrement(10);
-
 
         //textPanel.add(scrollPane.getVerticalScrollBar(), BorderLayout.EAST);
 

@@ -5,16 +5,16 @@ public class MyTimer implements Runnable {
 
     long startTime;
     JLabel jLabel;
+    boolean end = false;
 
     public MyTimer(JLabel jLabel) {
         startTime = System.currentTimeMillis();
         this.jLabel = jLabel;
     }
 
-
     public void run() {
         try {
-            while (true) { // change: add condition, if end of writing (pointer at last char && green) -> end
+            while (!end) {
                 Thread.sleep(500);
                 long time = System.currentTimeMillis() - startTime;
                 long seconds = time / 1000;
@@ -27,17 +27,14 @@ public class MyTimer implements Runnable {
                 }
 
                 // make similar background task with WPMs
-                System.out.println("myTimer Time: " + jLabel.getText());
+                //System.out.println("myTimer Time: " + jLabel.getText());
                 jLabel.repaint();
                 jLabel.updateUI();
-
-
             }
-
-
-            //throw new IllegalArgumentException();
         } catch (Exception ex) {
             System.out.println(ex.getMessage());
         }
+
+        System.out.println("Timer thread ended " + Thread.currentThread().getId());
     }
 }
