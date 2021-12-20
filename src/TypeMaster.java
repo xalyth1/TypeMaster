@@ -6,6 +6,11 @@ import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.image.BufferedImage;
+import java.io.File;
+import java.sql.*;
+import java.util.ArrayList;
+
+import org.sqlite.SQLiteDataSource;
 
 public class TypeMaster extends JFrame implements Runnable {
 
@@ -32,6 +37,9 @@ public class TypeMaster extends JFrame implements Runnable {
     BufferedImage bi = prepareBufferedImage(new BufferedImage(700, 50, BufferedImage.TYPE_INT_ARGB), pointer);
 
     JButton inputButton;
+
+    JButton databaseButton;
+    int databaseTextIndex;
 
     KeyAdapter keyAdapter;
 
@@ -183,7 +191,7 @@ public class TypeMaster extends JFrame implements Runnable {
                     public void run() {
                         String inputText = (String) JOptionPane.showInputDialog(TypeMaster.this/*JOptionPane.getRootFrame()*/,
                                 "Please input your own text:",
-                                "Customized Dialog",
+                                "Input own text",
                                 JOptionPane.PLAIN_MESSAGE,
                                 null,
                                 null,
@@ -252,6 +260,13 @@ public class TypeMaster extends JFrame implements Runnable {
         inputButton = new JButton("Input Own Text");
         inputButton.addActionListener(createActionListener());
         inputButton.setFocusable(false); // important: allows avoid problems with returning focus to new JTextPane after returning from JOptionPane.showInputDialog
+
+
+        databaseButton = new JButton("Load Texts");
+        databaseButton.addActionListener(e -> {
+            ArrayList<String> al = loadDataFromBase();
+            setText(al.get(0));
+        });
     }
 
     public void changeColor(int charIndex, Color color) {
@@ -298,6 +313,91 @@ public class TypeMaster extends JFrame implements Runnable {
 
         JPanel inputPanel = new JPanel();
         inputPanel.add(inputButton);
+        inputPanel.add(databaseButton);
         add(inputPanel);
+    }
+
+
+    private ArrayList<String> loadDataFromBase() {
+        String dbName = "database.db";
+        String path = "jdbc:sqlite:" + dbName;
+
+        System.out.println("Working Directory = " + System.getProperty("user.dir"));
+        File file = new File(System.getProperty("user.dir").toString() + "\\" + dbName);
+        System.out.println(file.exists());
+        if (!file.exists()) {
+            System.out.println("database file does not exist");
+            //JOptionPane.showMessageDialog(new Frame(), "FILE DOES NOT EXIST!");
+        }
+
+        ArrayList<String> al = new ArrayList<>();
+
+        SQLiteDataSource dataSource = new SQLiteDataSource();
+        dataSource.setUrl(path);
+        try (Connection con = dataSource.getConnection()) {
+            if (con.isValid(5)) {
+                System.out.println("Connection is valid.");
+                DatabaseMetaData metaData = con.getMetaData();
+                //ResultSet rs = metaData.getTables(null, null, "%", null);
+
+                String tableName = "TEXTS";
+
+                ResultSet data_texts = con.createStatement().executeQuery(
+                        "SELECT * FROM " + tableName + ";");
+                //ResultSetMetaData rsmd = rs.getMetaData();
+                //int numberOfColumns = rsmd.getColumnCount();
+                int rowCounted = data_texts.getInt(1);
+                while (data_texts.next()) {
+                    //System.out.println(data_texts.getString(2));
+                    al.add(data_texts.getString(2));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        System.out.println(al);
+        return al;
+
+
+    }
+
+
+    void setText(String str) {
+        pointer = 0;
+        error = false;
+
+        changeColor(pointer, Color.BLACK);
+
+        myTimer.end = true;
+        myTimer = new MyTimer(timeLabel);
+        timerThread = new Thread(myTimer);
+        timerThread.start();
+        System.out.println("Timer thread started " + timerThread.getId());
+
+        Font font = new Font("SansSerif", Font.BOLD, 30);
+        jTextPane.setFont(font);
+
+        jTextPane.setText(str);
+
+        Style style = jTextPane.addStyle("I'm a Style", null);
+        jTextPane.getStyledDocument().setCharacterAttributes(0, str.length(), style, true);
+
+
+        jTextPane.setEditable(false);
+        //jTextPane.setDisabledTextColor(Color.BLACK);//
+
+        pointerLabel.setText(" Pointer: " + pointer);
+        //label.setHorizontalAlignment(SwingConstants.LEFT);
+
+        jTextPane.setCaretPosition(pointer);
+        jTextPane.getCaret().setVisible(true);
+
+        jTextPane.grabFocus();
+        jTextPane.requestFocusInWindow();
+
+        bi = prepareBufferedImage(bi, pointer);
+
+        startMillis = System.currentTimeMillis();
     }
 }
