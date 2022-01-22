@@ -45,6 +45,14 @@ public class TypeMaster extends JFrame implements Runnable {
 
     long startMillis = System.currentTimeMillis();
 
+    ArrayList<String> al;
+    int currentTextIndex;
+    private JMenuBar jMenuBar;
+    private JMenu fileJMenu;
+    private JMenuItem loadJMenuItem;
+    private JMenuItem saveJMenuItem;
+    private JMenuItem exitJMenuItem;
+
     public static void main(String[] args) {
         SwingUtilities.invokeLater(new TypeMaster());
     }
@@ -77,8 +85,57 @@ public class TypeMaster extends JFrame implements Runnable {
         timerThread.start();
         System.out.println("Timer thread started " + timerThread.getId());
 
+        createMenu();
         System.out.println("created GUI");
         setVisible(true);
+    }
+
+    private void createMenu() {
+        jMenuBar = new JMenuBar();
+        setJMenuBar(jMenuBar);
+
+        fileJMenu = new JMenu("File");
+        loadJMenuItem = new JMenuItem("Load");
+        saveJMenuItem = new JMenuItem("Save");
+        exitJMenuItem = new JMenuItem("Exit");
+
+        jMenuBar.add(fileJMenu);
+        fileJMenu.add(loadJMenuItem);
+        fileJMenu.add(saveJMenuItem);
+        fileJMenu.add(exitJMenuItem);
+
+        JMenu viewMenu = new JMenu("View");
+        jMenuBar.add(viewMenu);
+
+        JMenuItem largerFontMenuItem = new JMenuItem("Increase font size");
+        viewMenu.add(largerFontMenuItem);
+        largerFontMenuItem.addActionListener(e -> {
+            int size = jTextPane.getFont().getSize();
+            String fontName = jTextPane.getFont().getFontName();
+            int style = jTextPane.getFont().getStyle();
+            jTextPane.setFont(new Font(fontName, style,size + 2));
+        });
+
+        JMenuItem smallerFontMenuItem = new JMenuItem("Decrease font size");
+        viewMenu.add(smallerFontMenuItem);
+        smallerFontMenuItem.addActionListener(e -> {
+            int size = jTextPane.getFont().getSize();
+            String fontName = jTextPane.getFont().getFontName();
+            int style = jTextPane.getFont().getStyle();
+            jTextPane.setFont(new Font(fontName, style,size - 2));
+        });
+
+        JMenuItem changeFontColorMenuItem = new JMenuItem("Change font color");
+        viewMenu.add(changeFontColorMenuItem);
+        changeFontColorMenuItem.addActionListener(e ->
+                jTextPane.setForeground(JColorChooser.showDialog(null, "Choose Font Color", Color.BLACK)));
+
+        JMenuItem changeBackgroundColorMenuItem = new JMenuItem("Change text background color");
+        viewMenu.add(changeBackgroundColorMenuItem);
+        changeBackgroundColorMenuItem.addActionListener(e ->
+                jTextPane.setBackground(JColorChooser.showDialog(null, "Choose Font Color", Color.BLACK)));
+
+        exitJMenuItem.addActionListener(e -> System.exit(0));
     }
 
     public BufferedImage prepareBufferedImage(BufferedImage img, int pointer) {
@@ -158,6 +215,16 @@ public class TypeMaster extends JFrame implements Runnable {
 
                 if (!error && pointer == text.length() - 1) {
                     myTimer.end = true;
+
+                    if (currentTextIndex < al.size() - 1) {
+                        currentTextIndex++;
+                        setText(al.get(currentTextIndex));
+                        pointer = 0;
+                    } else {
+                        pointerLabel.setText("No more texts.");
+                    }
+
+
                 }
 
                 jTextPane.setCaretPosition(pointer);
@@ -183,61 +250,56 @@ public class TypeMaster extends JFrame implements Runnable {
     }
 
     public ActionListener createActionListener() {
-        return new ActionListener() {
+        return actionEvent -> SwingUtilities.invokeLater(new Runnable() {
             @Override
-            public void actionPerformed(ActionEvent actionEvent) {
-                SwingUtilities.invokeLater(new Runnable() {
-                    @Override
-                    public void run() {
-                        String inputText = (String) JOptionPane.showInputDialog(TypeMaster.this/*JOptionPane.getRootFrame()*/,
-                                "Please input your own text:",
-                                "Input own text",
-                                JOptionPane.PLAIN_MESSAGE,
-                                null,
-                                null,
-                                "paste here your text");
+            public void run() {
+                String inputText = (String) JOptionPane.showInputDialog(TypeMaster.this/*JOptionPane.getRootFrame()*/,
+                        "Please input your own text:",
+                        "Input own text",
+                        JOptionPane.PLAIN_MESSAGE,
+                        null,
+                        null,
+                        "paste here your text");
 
-                        if (inputText != null) {
-                            pointer = 0;
-                            error = false;
+                if (inputText != null) {
+                    pointer = 0;
+                    error = false;
 
-                            changeColor(pointer, Color.BLACK);
+                    changeColor(pointer, Color.BLACK);
 
-                            myTimer.end = true;
-                            myTimer = new MyTimer(timeLabel);
-                            timerThread = new Thread(myTimer);
-                            timerThread.start();
-                            System.out.println("Timer thread started " + timerThread.getId());
+                    myTimer.end = true;
+                    myTimer = new MyTimer(timeLabel);
+                    timerThread = new Thread(myTimer);
+                    timerThread.start();
+                    System.out.println("Timer thread started " + timerThread.getId());
 
-                            Font font = new Font("SansSerif", Font.BOLD, 30);
-                            jTextPane.setFont(font);
+                    Font font = new Font("SansSerif", Font.BOLD, 30);
+                    jTextPane.setFont(font);
 
-                            jTextPane.setText(inputText);
+                    jTextPane.setText(inputText);
 
-                            Style style = jTextPane.addStyle("I'm a Style", null);
-                            jTextPane.getStyledDocument().setCharacterAttributes(0, inputText.length(), style, true);
+                    Style style = jTextPane.addStyle("I'm a Style", null);
+                    jTextPane.getStyledDocument().setCharacterAttributes(0, inputText.length(), style, true);
 
 
-                            jTextPane.setEditable(false);
-                            //jTextPane.setDisabledTextColor(Color.BLACK);//
+                    jTextPane.setEditable(false);
+                    //jTextPane.setDisabledTextColor(Color.BLACK);//
 
-                            pointerLabel.setText(" Pointer: " + pointer);
-                            //label.setHorizontalAlignment(SwingConstants.LEFT);
+                    pointerLabel.setText(" Pointer: " + pointer);
+                    //label.setHorizontalAlignment(SwingConstants.LEFT);
 
-                            jTextPane.setCaretPosition(pointer);
-                            jTextPane.getCaret().setVisible(true);
+                    jTextPane.setCaretPosition(pointer);
+                    jTextPane.getCaret().setVisible(true);
 
-                            jTextPane.grabFocus();
-                            jTextPane.requestFocusInWindow();
+                    jTextPane.grabFocus();
+                    jTextPane.requestFocusInWindow();
 
-                            bi = prepareBufferedImage(bi, pointer);
+                    bi = prepareBufferedImage(bi, pointer);
 
-                            startMillis = System.currentTimeMillis();
-                        }
-                    }
-                });
+                    startMillis = System.currentTimeMillis();
+                }
             }
-        };
+        });
     }
 
     public void initializeGUIelements() {
@@ -264,8 +326,9 @@ public class TypeMaster extends JFrame implements Runnable {
 
         databaseButton = new JButton("Load Texts");
         databaseButton.addActionListener(e -> {
-            ArrayList<String> al = loadDataFromBase();
+            al = loadDataFromBase();
             setText(al.get(0));
+            currentTextIndex = 0;
         });
     }
 
@@ -317,13 +380,16 @@ public class TypeMaster extends JFrame implements Runnable {
         add(inputPanel);
     }
 
+    private void selectSubject() {
+
+    }
 
     private ArrayList<String> loadDataFromBase() {
         String dbName = "database.db";
         String path = "jdbc:sqlite:" + dbName;
 
         System.out.println("Working Directory = " + System.getProperty("user.dir"));
-        File file = new File(System.getProperty("user.dir").toString() + "\\" + dbName);
+        File file = new File(System.getProperty("user.dir") + "\\" + dbName);
         System.out.println(file.exists());
         if (!file.exists()) {
             System.out.println("database file does not exist");
@@ -343,7 +409,7 @@ public class TypeMaster extends JFrame implements Runnable {
                 String tableName = "TEXTS";
 
                 ResultSet data_texts = con.createStatement().executeQuery(
-                        "SELECT * FROM " + tableName + ";");
+                        "SELECT * FROM " + tableName + " WHERE subject_id = 2;");
                 //ResultSetMetaData rsmd = rs.getMetaData();
                 //int numberOfColumns = rsmd.getColumnCount();
                 int rowCounted = data_texts.getInt(1);
@@ -358,10 +424,7 @@ public class TypeMaster extends JFrame implements Runnable {
 
         System.out.println(al);
         return al;
-
-
     }
-
 
     void setText(String str) {
         pointer = 0;
