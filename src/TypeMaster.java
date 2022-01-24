@@ -1,7 +1,6 @@
 import javax.swing.*;
 import javax.swing.text.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
@@ -13,7 +12,6 @@ import java.util.ArrayList;
 import org.sqlite.SQLiteDataSource;
 
 public class TypeMaster extends JFrame implements Runnable {
-
     StyledDocument doc = new DefaultStyledDocument();
     JTextPane jTextPane = new JTextPane(doc);
     JScrollPane scrollPane = new JScrollPane(jTextPane);
@@ -47,6 +45,7 @@ public class TypeMaster extends JFrame implements Runnable {
 
     ArrayList<String> al;
     int currentTextIndex;
+
     private JMenuBar jMenuBar;
     private JMenu fileJMenu;
     private JMenuItem loadJMenuItem;
@@ -141,10 +140,10 @@ public class TypeMaster extends JFrame implements Runnable {
     public BufferedImage prepareBufferedImage(BufferedImage img, int pointer) {
         Graphics2D paintBrush = img.createGraphics();
 
-        paintBrush.setColor(Color.RED);
+        paintBrush.setColor(LayoutSettings.getWrongLetterColor());
         paintBrush.fillRect(0, 0, img.getWidth(), img.getHeight());
 
-        paintBrush.setColor(Color.GREEN);
+        paintBrush.setColor(LayoutSettings.getGoodLetterColor());
 
         //double percentage = error ? (double) pointer /  jTextPane.getText().length() : (double) errorIndex /  jTextPane.getText().length();
         double percentage;
@@ -193,17 +192,18 @@ public class TypeMaster extends JFrame implements Runnable {
                 calculateWPM(text);
 
                 if (e.getKeyChar() == text.charAt(pointer)) {
-                    changeColor(pointer, Color.GREEN);
+                    changeColor(pointer, LayoutSettings.getGoodLetterColor());
                     pointer++;
+                    jTextPane.setCaretPosition(pointer);///////////////////////
                 } else if (e.getKeyChar() == KeyEvent.VK_BACK_SPACE) {
                     if (pointer > 0)
                         pointer--;
-                    changeColor(pointer, Color.BLACK);
+                    changeColor(pointer, LayoutSettings.getDefaultFontColor());
                     if (pointer == errorIndex) {
                         error = false;
                     }
                 } else if (e.getKeyChar() != text.charAt(pointer)) {
-                    changeColor(pointer, Color.RED);
+                    changeColor(pointer, LayoutSettings.getWrongLetterColor());
                     if (!error) {
                         error = true; // wrror = true means: occurence of any wrong (red) character in entire text
                         errorIndex = pointer;
@@ -289,6 +289,10 @@ public class TypeMaster extends JFrame implements Runnable {
                     //label.setHorizontalAlignment(SwingConstants.LEFT);
 
                     jTextPane.setCaretPosition(pointer);
+                    jTextPane.setCaretColor(LayoutSettings.getDefaultFontColor());
+
+                    System.out.println("caret color: " + jTextPane.getCaretColor());
+
                     jTextPane.getCaret().setVisible(true);
 
                     jTextPane.grabFocus();
@@ -306,9 +310,10 @@ public class TypeMaster extends JFrame implements Runnable {
         //StyledDocument doc = new DefaultStyledDocument();
         //jTextPane = new JTextPane(doc);
         jTextPane.setText("Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.");
+        jTextPane.setForeground(LayoutSettings.getDefaultFontColor());
+        jTextPane.setFont(LayoutSettings.getFont());
+        jTextPane.setBackground(LayoutSettings.getBackgroundColor());// grey
 
-        Font font = new Font("SansSerif", Font.BOLD, 30);
-        jTextPane.setFont(font);
         jTextPane.setEditable(false);
 
         pointerLabel = new JLabel();
@@ -320,11 +325,44 @@ public class TypeMaster extends JFrame implements Runnable {
         jTextPane.addKeyListener(keyAdapter);
 
         inputButton = new JButton("Input Own Text");
+        inputButton.setBackground(LayoutSettings.BUTTON_COLOR);
+        //inputButton.setFont(LayoutSettings.getFont());
+        inputButton.setForeground(LayoutSettings.getDefaultFontColor());
+        inputButton.setFocusPainted(true);
+        inputButton.setRolloverEnabled(true);
+        inputButton.setBorderPainted(false);
+        inputButton.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                inputButton.setBackground(LayoutSettings.BUTTON_FOCUS_COLOR);
+            }
+
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                inputButton.setBackground(LayoutSettings.BUTTON_COLOR);
+            }
+        });
+
+
         inputButton.addActionListener(createActionListener());
         inputButton.setFocusable(false); // important: allows avoid problems with returning focus to new JTextPane after returning from JOptionPane.showInputDialog
 
 
         databaseButton = new JButton("Load Texts");
+        databaseButton.setBackground(LayoutSettings.BUTTON_COLOR);
+        databaseButton.setForeground(LayoutSettings.getDefaultFontColor());
+        databaseButton.setFocusPainted(true);
+        databaseButton.setRolloverEnabled(true);
+        databaseButton.setBorderPainted(false);
+
+        databaseButton.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                databaseButton.setBackground(LayoutSettings.BUTTON_FOCUS_COLOR);
+            }
+
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                databaseButton.setBackground(LayoutSettings.BUTTON_COLOR);
+            }
+        });
+
         databaseButton.addActionListener(e -> {
             al = loadDataFromBase();
             setText(al.get(0));
@@ -372,9 +410,8 @@ public class TypeMaster extends JFrame implements Runnable {
 
         add(textPanel);
 
-        //add(scrollPane);
-
         JPanel inputPanel = new JPanel();
+        inputPanel.setBackground(LayoutSettings.INPUT_PANEL_COLOR);
         inputPanel.add(inputButton);
         inputPanel.add(databaseButton);
         add(inputPanel);
@@ -430,7 +467,7 @@ public class TypeMaster extends JFrame implements Runnable {
         pointer = 0;
         error = false;
 
-        changeColor(pointer, Color.BLACK);
+        changeColor(pointer, LayoutSettings.getDefaultFontColor());
 
         myTimer.end = true;
         myTimer = new MyTimer(timeLabel);
@@ -438,8 +475,8 @@ public class TypeMaster extends JFrame implements Runnable {
         timerThread.start();
         System.out.println("Timer thread started " + timerThread.getId());
 
-        Font font = new Font("SansSerif", Font.BOLD, 30);
-        jTextPane.setFont(font);
+        //Font font = new Font("SansSerif", Font.BOLD, 30);
+        jTextPane.setFont(LayoutSettings.getFont());
 
         jTextPane.setText(str);
 
