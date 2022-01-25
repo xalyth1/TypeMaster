@@ -1,7 +1,7 @@
 import java.awt.*;
 
 public class LayoutSettings {
-    private static Font font = new Font("Segoe UI Semibold", Font.PLAIN, 24);;
+    private static Font font = new Font("Segoe UI Semibold", Font.PLAIN, 24);
     private static Color defaultFontColor = new Color(187,187,187);
     private static Color backgroundColor = new Color(43,43,43);
 
@@ -14,6 +14,9 @@ public class LayoutSettings {
     public static final Color BUTTON_COLOR = new Color(80,80,80);
     public static final Color INPUT_PANEL_COLOR = new Color(60,60,60);
     public static final Color BUTTON_FOCUS_COLOR = new Color(100,100,100);
+
+
+    public static final Font LABELS_PANEL_FONT = new Font("Segoe UI Semibold", Font.BOLD, 24);;
 
     public static Font getFont() {
         return font;
