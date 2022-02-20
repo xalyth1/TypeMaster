@@ -1,13 +1,18 @@
+import org.sqlite.SQLiteDataSource;
+
 import javax.swing.*;
-import javax.swing.text.*;
+import javax.swing.text.DefaultEditorKit;
+import javax.swing.text.DefaultStyledDocument;
+import javax.swing.text.StyledDocument;
 import java.awt.*;
 import java.awt.event.KeyAdapter;
 import java.io.File;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
-
-import org.sqlite.SQLiteDataSource;
 
 public class TypeMaster extends JFrame implements Runnable {
     StyledDocument doc = new DefaultStyledDocument();
@@ -24,7 +29,7 @@ public class TypeMaster extends JFrame implements Runnable {
 
     JButton inputButton;
     JButton databaseButton;
-    int databaseTextIndex;
+    //int databaseTextIndex;
 
     KeyAdapter keyAdapter;
 
@@ -54,21 +59,15 @@ public class TypeMaster extends JFrame implements Runnable {
 
         typingHandler = new TypingHandler(this);
         swingElements = new SwingElements(this);
+
         initializeGUI();
-
-
-        //bi = prepareBufferedImage(new BufferedImage(700, 50, BufferedImage.TYPE_INT_ARGB));
-
         organizeLayout();
-
-        setJMenuBar(swingElements.createMenu());
 
         System.out.println("created GUI");
         setVisible(true);
     }
 
     public void initializeGUI() {
-
         jTextPane.setText("Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.");
         jTextPane.setForeground(LayoutSettings.getDefaultFontColor());
         jTextPane.setFont(LayoutSettings.getFont());
@@ -103,7 +102,7 @@ public class TypeMaster extends JFrame implements Runnable {
         databaseButton.addMouseListener(swingElements.createMouseAdapter(databaseButton));
         databaseButton.addActionListener(e -> {
             Database database = new Database();
-            al = database.loadDataFromBase();
+            al = database.loadDataFromDatabase();
             typingHandler.setText(al.get(0));
             currentTextIndex = 0;
         });
@@ -204,8 +203,10 @@ public class TypeMaster extends JFrame implements Runnable {
         completeCorrectnessModeCheckBox.setFocusPainted(true);
         completeCorrectnessModeCheckBox.setRolloverEnabled(true);
         completeCorrectnessModeCheckBox.setBorderPainted(false);
-    }
 
+
+        setJMenuBar(swingElements.createMenu());
+    }
 
 
     public void organizeLayout() {
@@ -253,9 +254,7 @@ public class TypeMaster extends JFrame implements Runnable {
     private void selectSubject() {
 
     }
-
     TypingHandler getTypingHandler() {
         return this.typingHandler;
     }
-
 }

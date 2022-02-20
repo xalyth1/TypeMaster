@@ -140,10 +140,12 @@ public class TypingHandler {
 
                 typeMaster.pointerLabel.setText(" Pointer: " + pointer + "    WPM = " + (int) WPM);
 
-                if (!error && pointer == text.length() - 1) {
+                if (!error && pointer == text.length()) {
                     myTimer.end = true;
-
-                    if (typeMaster.currentTextIndex < typeMaster.al.size() - 1) {
+                    // if input own text mode
+                    if (typeMaster.al == null) {
+                        //typeMaster.pointerLabel.setText("Typing test ended. Results: WPM:" + (int) WPM + " Time: " + myTimer.getTimeElapsed());
+                    } else if (typeMaster.currentTextIndex < typeMaster.al.size() - 1) {
                         typeMaster.currentTextIndex++;
                         setText(typeMaster.al.get(typeMaster.currentTextIndex));
                         pointer = 0;

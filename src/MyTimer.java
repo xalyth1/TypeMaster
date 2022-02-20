@@ -1,21 +1,22 @@
 import javax.swing.*;
-import java.util.TimerTask;
 
 public class MyTimer implements Runnable {
 
     long startTime;
+    long endTime;
     JLabel jLabel;
     boolean end = false;
 
     public MyTimer(JLabel jLabel) {
-        startTime = System.currentTimeMillis();
+
         this.jLabel = jLabel;
     }
 
     public void run() {
         try {
+            startTime = System.currentTimeMillis();
             while (!end) {
-                Thread.sleep(500);
+                //Thread.sleep(500);
                 long time = System.currentTimeMillis() - startTime;
                 long seconds = time / 1000;
                 if (seconds < 60) {
@@ -31,10 +32,30 @@ public class MyTimer implements Runnable {
                 jLabel.repaint();
                 jLabel.updateUI();
             }
+            endTime = System.currentTimeMillis();
+
         } catch (Exception ex) {
             System.out.println(ex.getMessage());
         }
 
         System.out.println("Timer thread ended " + Thread.currentThread().getId());
+    }
+
+
+    public String getTimeElapsed() {
+        long timeInMillis = endTime - startTime;
+        double timeInSeconds = (double) timeInMillis / 1000;
+        String str ;
+        if (timeInSeconds < 60.0) {
+            str = "0:" + (int) timeInSeconds;
+        } else {
+            int n = (int) timeInSeconds / 60;
+
+            int minutes = (int) timeInSeconds - 60 * n;
+            int seconds = (int) timeInSeconds % 60;
+
+            str =  minutes + ":" + seconds;
+        }
+        return str;
     }
 }

@@ -19,7 +19,7 @@ public class Database {
         System.out.println("Working Directory = " + System.getProperty("user.dir"));
     }
 
-    public ArrayList<String> loadDataFromBase() {
+    ArrayList<String> loadDataFromDatabase() {
         File file = new File(System.getProperty("user.dir") + "\\" + dbName);
         System.out.println(file.exists());
         if (!file.exists()) {
@@ -51,6 +51,7 @@ public class Database {
             }
         } catch (SQLException e) {
             e.printStackTrace();
+            //show user message
         }
 
         System.out.println(al);
