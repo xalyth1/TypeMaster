@@ -25,8 +25,8 @@ public class TypingHandler {
 
     public TypingHandler(TypeMaster typeMaster) {
         this.typeMaster = typeMaster;
-        words = typeMaster.jTextPane.getText().split(" ").length;
-        myTimer = new MyTimer(typeMaster.timeLabel);
+        words = typeMaster.getJTextPane().getText().split(" ").length;
+        myTimer = new MyTimer(typeMaster.getTimeLabel());
     }
 
     private void calculateWPM(String text) {
@@ -65,13 +65,13 @@ public class TypingHandler {
 
                     changeColor(pointer, Color.BLACK);
 
-                    myTimer.end = true;
-                    myTimer = new MyTimer(typeMaster.timeLabel);
+                    myTimer.setFinished(true);
+                    myTimer = new MyTimer(typeMaster.getTimeLabel());
                     timerThread = new Thread(myTimer);
                     timerThread.start();
                     System.out.println("Timer thread started " + timerThread.getId());
 
-                    JTextPane jTextPane = typeMaster.jTextPane;
+                    JTextPane jTextPane = typeMaster.getJTextPane();
 
                     Font font = new Font("SansSerif", Font.BOLD, 30);
                     jTextPane.setFont(font);
@@ -84,7 +84,7 @@ public class TypingHandler {
                     jTextPane.setEditable(false);
                     //jTextPane.setDisabledTextColor(Color.BLACK);//
 
-                    typeMaster.pointerLabel.setText(" Pointer: " + pointer);
+                    typeMaster.getPointerLabel().setText(" Pointer: " + pointer);
                     //label.setHorizontalAlignment(SwingConstants.LEFT);
 
                     jTextPane.setCaretPosition(pointer);
@@ -97,7 +97,7 @@ public class TypingHandler {
                     jTextPane.grabFocus();
                     jTextPane.requestFocusInWindow();
 
-                    typeMaster.swingElements.bi = typeMaster.swingElements.prepareBufferedImage(typeMaster.swingElements.bi, pointer);
+                    typeMaster.swingElements.updateBufferedImage(pointer);
 
                     startMillis = System.currentTimeMillis();
                 }
@@ -112,7 +112,7 @@ public class TypingHandler {
             public void keyTyped(KeyEvent e) {
                 super.keyPressed(e);
 
-                JTextPane jTextPane = typeMaster.jTextPane;
+                JTextPane jTextPane = typeMaster.getJTextPane();
 
                 String text = jTextPane.getText();
 
@@ -138,10 +138,10 @@ public class TypingHandler {
                     pointer++;
                 }
 
-                typeMaster.pointerLabel.setText(" Pointer: " + pointer + "    WPM = " + (int) WPM);
+                typeMaster.getPointerLabel().setText(" Pointer: " + pointer + "    WPM = " + (int) WPM);
 
                 if (!error && pointer == text.length()) {
-                    myTimer.end = true;
+                    myTimer.setFinished(true);
                     // if input own text mode
                     if (typeMaster.al == null) {
                         //typeMaster.pointerLabel.setText("Typing test ended. Results: WPM:" + (int) WPM + " Time: " + myTimer.getTimeElapsed());
@@ -150,14 +150,14 @@ public class TypingHandler {
                         setText(typeMaster.al.get(typeMaster.currentTextIndex));
                         pointer = 0;
                     } else {
-                        typeMaster.pointerLabel.setText("No more texts.");
+                        typeMaster.getPointerLabel().setText("No more texts.");
                     }
                 }
 
                 jTextPane.setCaretPosition(pointer);
                 jTextPane.getCaret().setVisible(true);
 
-                typeMaster.swingElements.bi = typeMaster.swingElements.prepareBufferedImage(typeMaster.swingElements.bi, pointer);
+                typeMaster.swingElements.updateBufferedImage(pointer);
             }
         };
     }
@@ -168,15 +168,15 @@ public class TypingHandler {
 
         changeColor(pointer, LayoutSettings.getDefaultFontColor());
 
-        myTimer.end = true;
-        myTimer = new MyTimer(typeMaster.timeLabel);
+        myTimer.setFinished(true);
+        myTimer = new MyTimer(typeMaster.getTimeLabel());
         timerThread = new Thread(myTimer);
         timerThread.start();
         System.out.println("Timer thread started " + timerThread.getId());
 
         //Font font = new Font("SansSerif", Font.BOLD, 30);
 
-        JTextPane jTextPane = typeMaster.jTextPane;
+        JTextPane jTextPane = typeMaster.getJTextPane();
 
         jTextPane.setFont(LayoutSettings.getFont());
 
@@ -189,7 +189,7 @@ public class TypingHandler {
         jTextPane.setEditable(false);
         //jTextPane.setDisabledTextColor(Color.BLACK);//
 
-        typeMaster.pointerLabel.setText(" Pointer: " + pointer);
+        typeMaster.getPointerLabel().setText(" Pointer: " + pointer);
         //label.setHorizontalAlignment(SwingConstants.LEFT);
 
         jTextPane.setCaretPosition(pointer);
@@ -198,16 +198,16 @@ public class TypingHandler {
         jTextPane.grabFocus();
         jTextPane.requestFocusInWindow();
 
-        typeMaster.swingElements.bi = typeMaster.swingElements.prepareBufferedImage(typeMaster.swingElements.bi, pointer);
+        typeMaster.swingElements.updateBufferedImage(pointer);
 
         startMillis = System.currentTimeMillis();
     }
 
     public void changeColor(int charIndex, Color color) {
-        Style style = typeMaster.jTextPane.addStyle("I'm a Style", null);
+        Style style = typeMaster.getJTextPane().addStyle("I'm a Style", null);
         StyleConstants.setForeground(style, color);
 
-        StyledDocument doc = typeMaster.jTextPane.getStyledDocument();
+        StyledDocument doc = typeMaster.getJTextPane().getStyledDocument();
 
         try {
             //doc.insertString(doc.getLength(), "BLAH ",style);

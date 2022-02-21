@@ -1,6 +1,10 @@
 import java.awt.*;
 
 public class LayoutSettings {
+
+    static final int MAIN_FRAME_WIDTH = 1000;
+    static final int MAIN_FRAME_HEIGHT = 621;
+
     private static Font font = new Font("Segoe UI Semibold", Font.PLAIN, 24);
     private static Color defaultFontColor = new Color(187,187,187);
     private static Color backgroundColor = new Color(43,43,43);
