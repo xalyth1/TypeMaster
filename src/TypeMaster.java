@@ -150,21 +150,14 @@ public class TypeMaster extends JFrame implements Runnable {
         labelsPanel.add(timeLabel);
 
         JPanel progressBarPanel = swingElements.createProgressBarPanel();
+        progressBarPanel.add(labelsPanel);
+        labelsPanel.setOpaque(false);
         add(progressBarPanel);
-
-        add(labelsPanel);
 
         JPanel textPanel = new JPanel();
         textPanel.setLayout(new BorderLayout());
 
-        //add(jTextPane);
         textPanel.add(scrollPane, BorderLayout.CENTER);
-//        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-//        scrollPane.setPreferredSize(new Dimension(20,200));
-//        //scrollPane.setCorner(JScrollPane.UPPER_RIGHT_CORNER, new Corner());
-//        scrollPane.getVerticalScrollBar().setUnitIncrement(10);
-
-        //textPanel.add(scrollPane.getVerticalScrollBar(), BorderLayout.EAST);
 
         add(textPanel);
 
