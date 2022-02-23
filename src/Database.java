@@ -22,13 +22,17 @@ public class Database {
         dataSource.setUrl(databasePath);
     }
 
-    public Database(String dbName, String databasePath) {
+    public Database(String dbName) {
         this.dbName = dbName;
-        this.databasePath = databasePath;
+        this.databasePath = "jdbc:sqlite:" + dbName;;
         dataSource.setUrl(databasePath);
     }
 
-    ArrayList<String> loadDataFromDatabase() {
+//    public Database(String absoluteDatabaseFilePath) {
+//
+//    }
+
+    ArrayList<String> loadDataFromDatabase() throws SQLException {
         File file = new File(System.getProperty("user.dir") + "\\" + dbName);
         System.out.println(file.exists());
         if (!file.exists()) {
@@ -55,9 +59,6 @@ public class Database {
                     al.add(data_texts.getString(1));
                 }
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
-            //show user message
         }
 
         System.out.println(al);

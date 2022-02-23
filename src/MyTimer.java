@@ -36,7 +36,7 @@ public class MyTimer implements Runnable {
         }
         endTime = System.currentTimeMillis();
 
-        System.out.println("Timer thread ended " + Thread.currentThread().getId());
+        System.out.println("Timer thread ended. id= " + Thread.currentThread().getId());
     }
 
     public String getTimeElapsed() {

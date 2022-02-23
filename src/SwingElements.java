@@ -14,7 +14,7 @@ public class SwingElements {
         this.typeMaster = typeMaster;
         this.typingHandler = this.typeMaster.getTypingHandler();
         this.bi = new BufferedImage(typeMaster.getWidth(), 50, BufferedImage.TYPE_INT_ARGB);
-        updateBufferedImage(typingHandler.pointer);
+        updateBufferedImage(typingHandler.getPointer());
     }
 
     JMenuBar createMenu() {
@@ -83,6 +83,23 @@ public class SwingElements {
         return panel;
     }
 
+    JPanel createSettingsPanel() {
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        panel.add(new JLabel("This is some label in settings panel"));
+        panel.add(new JLabel("Current mode: {own input, DB input}"));
+        panel.add(new JLabel("Session stats:"));
+        panel.add(new JLabel("   Races: N"));
+        panel.add(new JLabel("   AVG WPM: A"));
+        panel.add(new JLabel("Current subject: Java programming"));
+
+
+
+        panel.setVisible(false);
+
+        return panel;
+    }
+
     void updateBufferedImage(int pointer) {
         BufferedImage img = this.bi;
         Graphics2D paintBrush = img.createGraphics();
@@ -95,10 +112,10 @@ public class SwingElements {
         //double percentage = error ? (double) pointer /  jTextPane.getText().length() : (double) errorIndex /  jTextPane.getText().length();
         double percentage;
 
-        if (!typingHandler.error) {
+        if (!typingHandler.isError()) {
             percentage = (double) pointer / typeMaster.getJTextPane().getText().length();
         } else {
-            percentage = (double) typingHandler.errorIndex / typeMaster.getJTextPane().getText().length();
+            percentage = (double) typingHandler.getErrorIndex() / typeMaster.getJTextPane().getText().length();
         }
 
         int progress = (int) (percentage * img.getWidth());

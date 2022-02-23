@@ -3,16 +3,20 @@ import javax.swing.text.DefaultEditorKit;
 import javax.swing.text.DefaultStyledDocument;
 import javax.swing.text.StyledDocument;
 import java.awt.*;
+import java.io.File;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 public class TypeMaster extends JFrame implements Runnable {
+
     private final StyledDocument doc = new DefaultStyledDocument();
     private final JTextPane jTextPane = new JTextPane(doc);
     private final JScrollPane scrollPane = new JScrollPane(jTextPane);
 
     private final JPanel labelsPanel = new JPanel();
+    private JPanel settingsPanel;
 
     private JLabel pointerLabel;
     private JLabel timeLabel;
@@ -20,6 +24,7 @@ public class TypeMaster extends JFrame implements Runnable {
     private TypingHandler typingHandler;
     public SwingElements swingElements;
 
+    private JButton settingsButton;
     private JButton inputButton;
     private JButton databaseButton;
 
@@ -71,6 +76,17 @@ public class TypeMaster extends JFrame implements Runnable {
 
         jTextPane.addKeyListener(typingHandler.createKeyAdapter());
 
+
+        settingsButton = new JButton("Settings");
+        settingsButton.setBackground(LayoutSettings.BUTTON_COLOR);
+        settingsButton.setForeground(LayoutSettings.getDefaultFontColor());
+        settingsButton.setFocusPainted(true);
+        settingsButton.setRolloverEnabled(true);
+        settingsButton.setBorderPainted(false);
+        settingsButton.addMouseListener(swingElements.createMouseAdapter(settingsButton));
+        settingsButton.addActionListener(e -> settingsPanel.setVisible(!settingsPanel.isVisible()));
+
+
         inputButton = new JButton("Input Own Text");
         inputButton.setBackground(LayoutSettings.BUTTON_COLOR);
         //inputButton.setFont(LayoutSettings.getFont());
@@ -90,9 +106,16 @@ public class TypeMaster extends JFrame implements Runnable {
         databaseButton.setBorderPainted(false);
         databaseButton.addMouseListener(swingElements.createMouseAdapter(databaseButton));
         databaseButton.addActionListener(e -> {
-            List<String> al = database.loadDataFromDatabase();
-            typingHandler.setText(al.get(0));
-            currentTextIndex = 0;
+            try {
+                List<String> al = database.loadDataFromDatabase();
+                typingHandler.setText(al.get(0));
+                currentTextIndex = 0;
+
+            } catch (SQLException exception) {
+                exception.printStackTrace();
+                JOptionPane.showMessageDialog(this, "Database error. Could not load data from database.",
+                        "Database error", JOptionPane.ERROR_MESSAGE);
+            }
         });
 
         createTextJButton = new JButton("Create Text");
@@ -159,10 +182,14 @@ public class TypeMaster extends JFrame implements Runnable {
 
         textPanel.add(scrollPane, BorderLayout.CENTER);
 
+        settingsPanel = swingElements.createSettingsPanel();
+        textPanel.add(settingsPanel, BorderLayout.WEST);
+
         add(textPanel);
 
         JPanel inputPanel = new JPanel();
         inputPanel.setBackground(LayoutSettings.INPUT_PANEL_COLOR);
+        inputPanel.add(settingsButton);
         inputPanel.add(inputButton);
         inputPanel.add(databaseButton);
         inputPanel.add(createTextJButton);
@@ -172,12 +199,36 @@ public class TypeMaster extends JFrame implements Runnable {
 
 
     public boolean loadAnotherDatabase() {
-        //TODO
-        // show input dialog
-        // ask user for database name and path  -> select file in chooser
-        // create database object from user inputted file
-        // setDatabase(newDatabase)
-        // return operation is successful or not
+        JFileChooser jFileChooser = new JFileChooser(System.getProperty("user.dir"));
+
+        int returnValue = jFileChooser.showOpenDialog(null);
+
+        if (returnValue == JFileChooser.APPROVE_OPTION) {
+            File selectedFile = jFileChooser.getSelectedFile();
+
+            //System.out.println("   Selelected file: " + selectedFile.toString());
+
+            String path = selectedFile.getAbsolutePath();
+
+            System.out.println("Path: " + path);
+            System.out.println("file name: " + selectedFile.getName());
+
+
+            //System.out.println("File to load path: " + path);
+            if (selectedFile.exists()) {
+                System.out.println("Selected file exists");
+                try {
+                    //String str = Files.readString(Paths.get(path));
+                    //byte[] bytes = Files.readAllBytes(Paths.get(path));
+                    this.database = new Database(selectedFile.getName());
+
+                } catch (Exception exception) {
+                    exception.printStackTrace();
+                }
+            }
+        }
+
+
         return false;
     }
 

@@ -6,22 +6,25 @@ import java.awt.*;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.nio.charset.StandardCharsets;
 
 public class TypingHandler {
-    int pointer = 0;
-    boolean error = false;
-    int errorIndex;
 
-    double WPM = 0;
-    int words = 0;
+    private int pointer = 0;
+    private boolean error = false;
+    private int errorIndex;
 
-    MyTimer myTimer;
+    private double WPM = 0;
+    private int words = 0;
 
-    long startMillis;
 
-    Thread timerThread;
+    private MyTimer myTimer;
 
-    TypeMaster typeMaster;
+    private long startMillis;
+
+    private Thread timerThread;
+
+    private TypeMaster typeMaster;
 
     public TypingHandler(TypeMaster typeMaster) {
         this.typeMaster = typeMaster;
@@ -40,7 +43,10 @@ public class TypingHandler {
         int wordsCompleted = correctSubSting.split(" ").length;
         long timeInMillis = System.currentTimeMillis() - startMillis;
         double timeInSeconds = (double) timeInMillis / 1000;
-        WPM = (double) wordsCompleted * 60 / timeInSeconds;
+        //WPM = (double) wordsCompleted * 60 / timeInSeconds;
+        WPM = (double) correctIndex / 5 * 60 / timeInSeconds;
+
+        //newWPM = (double) correctIndex / 5 * 60 / timeInSeconds;
     }
 
     /**
@@ -69,14 +75,18 @@ public class TypingHandler {
                     myTimer = new MyTimer(typeMaster.getTimeLabel());
                     timerThread = new Thread(myTimer);
                     timerThread.start();
-                    System.out.println("Timer thread started " + timerThread.getId());
+                    System.out.println("Timer thread started id=" + timerThread.getId());
 
                     JTextPane jTextPane = typeMaster.getJTextPane();
 
                     Font font = new Font("SansSerif", Font.BOLD, 30);
                     jTextPane.setFont(font);
 
-                    jTextPane.setText(inputText);
+
+                    byte[] bytes = inputText.getBytes();
+                    String utf8EncodedText = new String(bytes, StandardCharsets.UTF_8);
+
+                    jTextPane.setText(utf8EncodedText);
 
                     Style style = jTextPane.addStyle("I'm a Style", null);
                     jTextPane.getStyledDocument().setCharacterAttributes(0, inputText.length(), style, true);
@@ -106,15 +116,15 @@ public class TypingHandler {
     }
 
     public KeyAdapter createKeyAdapter() {
-        //pointer = 0;
         return new KeyAdapter() {
             @Override
             public void keyTyped(KeyEvent e) {
                 super.keyPressed(e);
-
                 JTextPane jTextPane = typeMaster.getJTextPane();
-
-                String text = jTextPane.getText();
+                String text = jTextPane.getText()
+                        .replace('“', '"') // left-double-quotation mark  -> quotation mark
+                        .replace('”', '"') // right-double-quotation mark  -> quotation mark
+                        .replace("’", "'"); // right-single-quotation mark -> apostrophe
 
                 calculateWPM(text);
 
@@ -123,6 +133,12 @@ public class TypingHandler {
                     pointer++;
                     jTextPane.setCaretPosition(pointer);///////////////////////
                 } else if (e.getKeyChar() == KeyEvent.VK_BACK_SPACE) {
+                    if (pointer >= text.length()) {
+                        if (error) {
+                            pointer = text.length() - 1;
+                        }
+                    }
+
                     if (pointer > 0)
                         pointer--;
                     changeColor(pointer, LayoutSettings.getDefaultFontColor());
@@ -132,13 +148,13 @@ public class TypingHandler {
                 } else if (e.getKeyChar() != text.charAt(pointer)) {
                     changeColor(pointer, LayoutSettings.getWrongLetterColor());
                     if (!error) {
-                        error = true; // wrror = true means: occurence of any wrong (red) character in entire text
+                        error = true; // wrong = true means: occurence of any wrong (red) character in entire text
                         errorIndex = pointer;
                     }
                     pointer++;
                 }
 
-                typeMaster.getPointerLabel().setText(" Pointer: " + pointer + "    WPM = " + (int) WPM);
+                typeMaster.getPointerLabel().setText(" Pointer: " + pointer + "    WPM = " + (int) WPM );
 
                 if (!error && pointer == text.length()) {
                     myTimer.setFinished(true);
@@ -155,7 +171,7 @@ public class TypingHandler {
                 }
 
                 jTextPane.setCaretPosition(pointer);
-                jTextPane.getCaret().setVisible(true);
+                jTextPane.getCaret().setVisible(pointer >= text.length() ? false : true);
 
                 typeMaster.swingElements.updateBufferedImage(pointer);
             }
@@ -172,14 +188,12 @@ public class TypingHandler {
         myTimer = new MyTimer(typeMaster.getTimeLabel());
         timerThread = new Thread(myTimer);
         timerThread.start();
-        System.out.println("Timer thread started " + timerThread.getId());
+        //System.out.println("Timer thread started " + timerThread.getId());
 
         //Font font = new Font("SansSerif", Font.BOLD, 30);
 
         JTextPane jTextPane = typeMaster.getJTextPane();
-
         jTextPane.setFont(LayoutSettings.getFont());
-
         jTextPane.setText(str);
 
         Style style = jTextPane.addStyle("I'm a Style", null);
@@ -217,25 +231,26 @@ public class TypingHandler {
         }
     }
 
-    public void startTyping() {
-        startMillis = System.currentTimeMillis();
-        timerThread = new Thread(myTimer);
-        timerThread.start();
-        System.out.println("Timer thread started " + timerThread.getId());
-    }
+//    public void startTyping() {
+//        startMillis = System.currentTimeMillis();
+//        timerThread = new Thread(myTimer);
+//        timerThread.start();
+//        System.out.println("Timer thread started " + timerThread.getId());
+//    }
 
     public double getTextCompletedPercentage() {
         return 0.0;
     }
 
+    public int getPointer() {
+        return pointer;
+    }
 
+    public boolean isError() {
+        return error;
+    }
 
-
-
-
-
-
-
-
-
+    public int getErrorIndex() {
+        return errorIndex;
+    }
 }
